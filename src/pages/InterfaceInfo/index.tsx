@@ -65,7 +65,7 @@ const Index: React.FC = () =>{
   // @ts-ignore
   return (
     <PageContainer title="查看接口文档">
-      <Card>
+      <Card loading={loading}>
         {data ? (
           <Descriptions title={data.name} column={1} >
             <Descriptions.Item label="接口状态">{data.status ? '已上线' : '已下线'}</Descriptions.Item>

@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons';
-import type { ActionType, ProColumns, ProDescriptionsItemProps } from '@ant-design/pro-components';
+import {ActionType, FooterToolbar, ProColumns, ProDescriptionsItemProps} from '@ant-design/pro-components';
 import {
-  FooterToolbar,
+  //FooterToolbar,
   PageContainer,
   ProDescriptions,
   ProFormSelect,
@@ -10,7 +10,6 @@ import {
 import '@umijs/max';
 import { Button, Drawer, message } from 'antd';
 import React, { useRef, useState } from 'react';
-import type { SortOrder } from 'antd/es/table/interface'
 
 import {
   addInterfaceInfoUsingPost,
@@ -136,18 +135,21 @@ const TableList: React.FC = () => {
   };
 
   /**
-   *  Delete node
-   * @zh-CN 删除节点
+   * 删除节点
    *
    * @param record
    */
-  const handleRemove = async (record: API.InterfaceInfo) => {
+  const handleRemove = async (record: API.InterfaceInfo | API.InterfaceInfo[]) => {
     const hide = message.loading('正在删除');
     if (!record) return true;
     try {
-      await deleteInterfaceInfoUsingPost({
-        id: record.id
-      });
+      // 处理批量删除和单个删除
+      const recordArray = Array.isArray(record) ? record : [record];
+      for (const item of recordArray) {
+        await deleteInterfaceInfoUsingPost({
+          id: item.id
+        });
+      }
       hide();
       message.success('删除成功');
       actionRef.current?.reload();
@@ -275,28 +277,24 @@ const TableList: React.FC = () => {
         >
           修改
         </a>,
-        record.status === 0 ? <a
-          key="config"
+        <Button
+          type={record.status === 1 ? "text" : "link"}
+          danger={record.status === 1}
+          key="online"
           onClick={() => {
-            handleOnline(record);
+            if (record.status === 1) {
+              handleOffline(record);
+            } else {
+              handleOnline(record);
+            }
           }}
         >
-          发布
-        </a> : null,
-        record.status === 1 ? <Button
-          type="text"
-          danger
-          key="config"
-          onClick={() => {
-            handleOffline(record);
-          }}
-        >
-          下线
-        </Button> : null,
+          {record.status === 1 ? '下线' : '发布'}
+        </Button>,
         <Button
           type="text"
           danger
-          key="config"
+          key="delete"
           onClick={() => {
             handleRemove(record);
           }}
@@ -304,14 +302,14 @@ const TableList: React.FC = () => {
           删除
         </Button>,
       ],
-    },
+    }
   ];
   return (
     <PageContainer>
       <ProTable<API.RuleListItem, API.PageParams>
         headerTitle={'查询表格'}
         actionRef={actionRef}
-        rowKey="key"
+        rowKey="id"
         search={{
           labelWidth: 120,
         }}
@@ -328,8 +326,8 @@ const TableList: React.FC = () => {
         ]}
         request={async (
           params,
-          sort: Record<string, SortOrder>,
-          filter: Record<string, (string | number)[] | null>,
+          //sort: Record<string, SortOrder>,
+          //filter: Record<string, (string | number)[] | null>,
         ) => {
           const res: any = await listInterfaceInfoByPageUsingGet({
             ...params,
@@ -360,21 +358,15 @@ const TableList: React.FC = () => {
           extra={
             <div>
               已选择{' '}
-              <a
-                style={{
-                  fontWeight: 600,
-                }}
-              >
+              <a style={{ fontWeight: 600 }}>
                 {selectedRowsState.length}
               </a>{' '}
-              项 &nbsp;&nbsp;
-              <span>
-                服务调用次数总计 {selectedRowsState.reduce((pre, item) => pre + item.callNo!, 0)} 万
-              </span>
+              项
             </div>
           }
         >
           <Button
+            danger
             onClick={async () => {
               await handleRemove(selectedRowsState);
               setSelectedRows([]);
@@ -383,7 +375,6 @@ const TableList: React.FC = () => {
           >
             批量删除
           </Button>
-          <Button type="primary">批量审批</Button>
         </FooterToolbar>
       )}
 
@@ -437,8 +428,8 @@ const TableList: React.FC = () => {
         onCancel={() => {
           handleModalOpen(false);
         }}
-        onSubmit={(values) => {
-          handleAdd(values);
+        onSubmit={async (values) => {
+          await handleAdd(values);  // 忽略返回值
         }}
         open={createModalOpen}
       />
