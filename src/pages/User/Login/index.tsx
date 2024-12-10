@@ -1,5 +1,6 @@
 import { Footer } from '@/components';
 import { getFakeCaptcha } from '@/services/ant-design-pro/login';
+import { userLoginUsingPost } from '@/services/lengapi-backend/userController';
 import {
   AlipayCircleOutlined,
   LockOutlined,
@@ -19,7 +20,6 @@ import { Alert, message, Tabs } from 'antd';
 import { createStyles } from 'antd-style';
 import React, { useState } from 'react';
 import Settings from '../../../../config/defaultSettings';
-import {userLoginUsingPost} from "@/services/lengapi-backend/userController";
 const useStyles = createStyles(({ token }) => {
   return {
     action: {
@@ -89,9 +89,9 @@ const LoginMessage: React.FC<{
   );
 };
 const Login: React.FC = () => {
-  const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
+  const [userLoginState] = useState<API.LoginResult>({});
   const [type, setType] = useState<string>('account');
-  const { initialState, setInitialState } = useModel('@@initialState');
+  const { setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
 
   const handleSubmit = async (values: API.UserLoginRequest) => {
@@ -104,7 +104,7 @@ const Login: React.FC = () => {
         const urlParams = new URL(window.location.href).searchParams;
         history.push(urlParams.get('redirect') || '/');
         setInitialState({
-          loginUser: res.data
+          loginUser: res.data,
         });
         return;
       }
@@ -264,8 +264,11 @@ const Login: React.FC = () => {
               style={{
                 float: 'right',
               }}
+              onClick={() => {
+                history.push('/user/register');
+              }}
             >
-              忘记密码 ?
+              没有帐号？请前往注册
             </a>
           </div>
         </LoginForm>
