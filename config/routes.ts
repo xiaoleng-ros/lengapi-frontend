@@ -1,51 +1,59 @@
 export default [
-  { path: '/', name: '主页', icon: 'smile', component: './Index' },
+  {
+    path: '/user',
+    layout: false,
+    routes: [
+      { path: '/user/login', component: './User/Login' },
+      { path: '/user/register', component: './User/Register' },
+    ],
+  },
+  {
+    path: '/welcome',
+    name: '欢迎',
+    icon: 'smile',
+    component: './Index',
+  },
+  {
+    path: '/interface_api',
+    name: '接口广场',
+    icon: 'api',
+    component: './Admin/InterfaceAPI',
+  },
   {
     path: '/interface_info/:id',
     name: '查看接口',
     icon: 'smile',
     component: './InterfaceInfo',
     hideInMenu: true,
+    access: 'canUser',
   },
-
-  {
-    path: '/user',
-    layout: false,
-    routes: [
-      { name: '登录', path: '/user/login', component: './User/Login' },
-      { name: '注册', path: '/user/register', component: './User/Register' },
-    ],
-  },
-
   {
     path: '/admin',
-    name: '管理页',
+    name: '管理页面',
     icon: 'crown',
-    //access: 'canAdmin',
-    access: 'canUser',
+    access: 'showAdmin',
     routes: [
       {
-        name: '接口管理',
-        icon: 'table',
         path: '/admin/interface_info',
+        name: '接口管理',
         component: './Admin/InterfaceInfo',
+        access: 'canAdmin',
       },
       {
-        name: '接口展示',
-        icon: 'table',
-        path: '/admin/interface_api',
-        component: './Admin/InterfaceAPI',
-      },
-      {
-        name: '接口文档',
-        icon: 'analysis',
         path: '/admin/interface_analysis',
+        name: '接口分析',
         component: './Admin/InterfaceAnalysis',
         access: 'canAdmin',
       },
     ],
   },
-
-  { path: '/', redirect: '/welcome' },
-  { path: '*', layout: false, component: './404' },
+  {
+    path: '/',
+    redirect: '/welcome',
+  },
+  {
+    path: '*',
+    layout: false,
+    component: './404',
+  },
 ];

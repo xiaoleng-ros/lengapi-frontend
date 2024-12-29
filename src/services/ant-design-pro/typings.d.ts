@@ -99,3 +99,11 @@ declare namespace API {
     type?: NoticeIconItemType;
   };
 }
+
+interface InitialState {
+  loginUser?: API.LoginUserVO;
+  settings?: {
+    logo?: string;
+    [key: string]: any;
+  };
+}

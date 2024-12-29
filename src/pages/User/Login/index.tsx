@@ -20,41 +20,48 @@ import { Alert, message, Tabs } from 'antd';
 import { createStyles } from 'antd-style';
 import React, { useState } from 'react';
 import Settings from '../../../../config/defaultSettings';
-const useStyles = createStyles(({ token }) => {
-  return {
-    action: {
-      marginLeft: '8px',
-      color: 'rgba(0, 0, 0, 0.2)',
-      fontSize: '24px',
-      verticalAlign: 'middle',
-      cursor: 'pointer',
-      transition: 'color 0.3s',
-      '&:hover': {
-        color: token.colorPrimaryActive,
-      },
+
+// 定义样式接口
+interface LoginStyles {
+  action: string;
+  lang: string;
+  container: string;
+}
+
+const useStyles = createStyles<LoginStyles>(({ token }) => ({
+  action: {
+    marginLeft: '8px',
+    color: 'rgba(0, 0, 0, 0.2)',
+    fontSize: '24px',
+    verticalAlign: 'middle',
+    cursor: 'pointer',
+    transition: 'color 0.3s',
+    '&:hover': {
+      color: token.colorPrimaryActive,
     },
-    lang: {
-      width: 42,
-      height: 42,
-      lineHeight: '42px',
-      position: 'fixed',
-      right: 16,
-      borderRadius: token.borderRadius,
-      ':hover': {
-        backgroundColor: token.colorBgTextHover,
-      },
+  },
+  lang: {
+    width: 42,
+    height: 42,
+    lineHeight: '42px',
+    position: 'fixed',
+    right: 16,
+    borderRadius: token.borderRadius,
+    ':hover': {
+      backgroundColor: token.colorBgTextHover,
     },
-    container: {
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      overflow: 'auto',
-      backgroundImage:
-        "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
-      backgroundSize: '100% 100%',
-    },
-  };
-});
+  },
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+    overflow: 'auto',
+    backgroundImage:
+      "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
+    backgroundSize: '100% 100%',
+  },
+}));
+
 const ActionIcons = () => {
   const { styles } = useStyles();
   return (
@@ -63,15 +70,6 @@ const ActionIcons = () => {
       <TaobaoCircleOutlined key="TaobaoCircleOutlined" className={styles.action} />
       <WeiboCircleOutlined key="WeiboCircleOutlined" className={styles.action} />
     </>
-  );
-};
-const Lang = () => {
-  const { styles } = useStyles();
-  return (
-    <div className={styles.lang}>
-      {/* 这里可以添加你需要展示的内容 */}
-      Language
-    </div>
   );
 };
 const LoginMessage: React.FC<{
@@ -122,7 +120,6 @@ const Login: React.FC = () => {
           {'登录'}- {Settings.title}
         </title>
       </Helmet>
-      <Lang />
       <div
         style={{
           flex: '1',
@@ -135,8 +132,8 @@ const Login: React.FC = () => {
             maxWidth: '75vw',
           }}
           logo={<img alt="logo" src="/logo.svg" />}
-          title="Ant Design"
-          subTitle={'Ant Design 是西湖区最具影响力的 Web 设计规范'}
+          title="API 接口应用平台"
+          subTitle={'API 接口应用平台为用户和开发者提供全面 API 接口调用服务 '}
           initialValues={{
             autoLogin: true,
           }}

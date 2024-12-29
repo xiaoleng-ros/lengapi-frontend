@@ -25,3 +25,20 @@ declare const REACT_APP_ENV: 'test' | 'dev' | 'pre' | false;
 interface InitialState {
   loginUser?: API.UserVO;
 }
+
+declare namespace NodeJS {
+  interface ProcessEnv {
+    NODE_ENV: 'development' | 'production';
+    // 其他环境变量...
+  }
+
+  interface Process {
+    env: ProcessEnv;
+  }
+
+  interface Global {
+    process: Process;
+  }
+}
+
+declare const process: NodeJS.Process;
