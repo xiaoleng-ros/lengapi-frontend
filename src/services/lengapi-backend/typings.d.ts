@@ -167,6 +167,7 @@ declare namespace API {
     createTime?: string;
     description?: string;
     id?: number;
+    interfaceTotal?: number;
     isDelete?: number;
     method?: string;
     name?: string;
@@ -210,6 +211,7 @@ declare namespace API {
     createTime?: string;
     description?: string;
     id?: number;
+    interfaceTotal?: number;
     isDelete?: number;
     method?: string;
     name?: string;
@@ -227,6 +229,7 @@ declare namespace API {
     current?: number;
     description?: string;
     id?: number;
+    interfaceTotal?: number;
     method?: string;
     name?: string;
     pageSize?: number;
@@ -244,6 +247,7 @@ declare namespace API {
     current?: number;
     description?: string;
     id?: number;
+    interfaceTotal?: number;
     method?: string;
     name?: string;
     pageSize?: number;

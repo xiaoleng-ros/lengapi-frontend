@@ -1,14 +1,16 @@
 import { PlusOutlined } from '@ant-design/icons';
-import {ActionType, FooterToolbar, ProColumns, ProDescriptionsItemProps} from '@ant-design/pro-components';
 import {
-  //FooterToolbar,
+  ActionType,
+  FooterToolbar,
   PageContainer,
+  ProColumns,
   ProDescriptions,
+  ProDescriptionsItemProps,
   ProFormSelect,
   ProTable,
 } from '@ant-design/pro-components';
 import '@umijs/max';
-import { Button, Drawer, message } from 'antd';
+import { Button, Drawer, message, Modal } from 'antd';
 import React, { useRef, useState } from 'react';
 
 import {
@@ -17,43 +19,36 @@ import {
   listInterfaceInfoByPageUsingGet,
   offlineInterfaceInfoUsingPost,
   onlineInterfaceInfoUsingPost,
-  updateInterfaceInfoUsingPost
-} from "@/services/lengapi-backend/interfaceInfoController";
+  updateInterfaceInfoUsingPost,
+} from '@/services/lengapi-backend/interfaceInfoController';
 
-import CreateModal from "@/pages/Admin/InterfaceInfo/components/CreateModal";
-import UpdateModal from "@/pages/Admin/InterfaceInfo/components/CreateModal";
-
+import CreateModal from '@/pages/Admin/InterfaceInfo/components/CreateModal';
+import UpdateModal from '@/pages/Admin/InterfaceInfo/components/UpdateModal';
 
 const TableList: React.FC = () => {
-  /**
-   * @en-US Pop-up window of new window
-   * @zh-CN 新建窗口的弹窗
-   *  */
   const [createModalOpen, handleModalOpen] = useState<boolean>(false);
-  /**
-   * @en-US The pop-up window of the distribution update window
-   * @zh-CN 分布更新窗口的弹窗
-   * */
-  const [updateModalOpen, handleUpdateModalOpen] = useState<boolean>(false);
+  const [updateModalOpen, setUpdateModalOpen] = useState<boolean>(false);
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const actionRef = useRef<ActionType>();
   const [currentRow, setCurrentRow] = useState<API.InterfaceInfo>();
   const [selectedRowsState, setSelectedRows] = useState<API.InterfaceInfo[]>([]);
 
-  /**
-   * @en-US Add node
-   * @zh-CN 添加节点
-   * @param fields
-   */
+  const handleUpdateModalOpen = (open: boolean) => {
+    if (open && currentRow) {
+      console.log('Current Row:', currentRow);
+    }
+    setUpdateModalOpen(open);
+  };
+
   const handleAdd = async (fields: API.InterfaceInfo) => {
     const hide = message.loading('正在添加');
     try {
-      await addInterfaceInfoUsingPost({
-        ...fields,
-      });
+      await addInterfaceInfoUsingPost({ ...fields } as API.InterfaceInfoAddRequest);
       hide();
       message.success('创建成功');
       handleModalOpen(false);
+      // 添加这行来刷新表格
+      actionRef.current?.reload();
       return true;
     } catch (error: any) {
       hide();
@@ -62,22 +57,13 @@ const TableList: React.FC = () => {
     }
   };
 
-  /**
-   * @en-US Update node
-   * @zh-CN 更新节点
-   *
-   * @param fields
-   */
   const handleUpdate = async (fields: API.InterfaceInfo) => {
     if (!currentRow) {
       return;
     }
     const hide = message.loading('修改中');
     try {
-      await updateInterfaceInfoUsingPost({
-        id: currentRow.id,
-        ...fields,
-      });
+      await updateInterfaceInfoUsingPost({ id: currentRow.id, ...fields });
       hide();
       message.success('操作成功');
       return true;
@@ -88,18 +74,11 @@ const TableList: React.FC = () => {
     }
   };
 
-  /**
-   * 发布接口
-   *
-   * @param record
-   */
   const handleOnline = async (record: API.IdRequest) => {
     const hide = message.loading('发布中');
     if (!record) return true;
     try {
-      await onlineInterfaceInfoUsingPost({
-        id: record.id
-      });
+      await onlineInterfaceInfoUsingPost({ id: record.id });
       hide();
       message.success('发布成功');
       actionRef.current?.reload();
@@ -111,18 +90,11 @@ const TableList: React.FC = () => {
     }
   };
 
-  /**
-   * 下线接口
-   *
-   * @param record
-   */
   const handleOffline = async (record: API.IdRequest) => {
     const hide = message.loading('下线中');
     if (!record) return true;
     try {
-      await offlineInterfaceInfoUsingPost({
-        id: record.id
-      });
+      await offlineInterfaceInfoUsingPost({ id: record.id });
       hide();
       message.success('下线成功');
       actionRef.current?.reload();
@@ -134,67 +106,53 @@ const TableList: React.FC = () => {
     }
   };
 
-  /**
-   * 删除节点
-   *
-   * @param record
-   */
-  const handleRemove = async (record: API.InterfaceInfo | API.InterfaceInfo[]) => {
-    const hide = message.loading('正在删除');
-    if (!record) return true;
-    try {
-      // 处理批量删除和单个删除
-      const recordArray = Array.isArray(record) ? record : [record];
-      for (const item of recordArray) {
-        await deleteInterfaceInfoUsingPost({
-          id: item.id
-        });
-      }
-      hide();
-      message.success('删除成功');
-      actionRef.current?.reload();
-      return true;
-    } catch (error: any) {
-      hide();
-      message.error('删除失败,' + error.message);
-      return false;
-    }
+  const handleRemove = async (record: API.InterfaceInfo) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: `确定要删除接口 "${record.name}" 吗？`,
+      okText: '确认',
+      cancelText: '取消',
+      okType: 'danger',
+      onOk: async () => {
+        const hide = message.loading('正在删除');
+        if (!record.id) return true;
+        try {
+          await deleteInterfaceInfoUsingPost({
+            id: record.id,
+          });
+          hide();
+          message.success('删除成功');
+          actionRef.current?.reload();
+          return true;
+        } catch (error: any) {
+          hide();
+          message.error('删除失败，' + error.message);
+          return false;
+        }
+      },
+    });
   };
 
-  // @ts-ignore
-  // @ts-ignore
-  /**
-   * @en-US International configuration
-   * @zh-CN 国际化配置
-   * */
-
   const columns: ProColumns<API.InterfaceInfo>[] = [
-    {
-      title: 'id',
-      dataIndex: 'id',
-      valueType: 'index',
-    },
+    { title: 'id', dataIndex: 'id', valueType: 'index' },
     {
       title: '接口名称',
       dataIndex: 'name',
       valueType: 'text',
-      formItemProps: {
-        rules: [{
-          required: true,
-        }]
-      }
+      formItemProps: { rules: [{ required: true }] },
     },
     {
       title: '描述',
       dataIndex: 'description',
       valueType: 'textarea',
+      formItemProps: { rules: [{ required: true }] },
     },
     {
       title: '请求方法',
       dataIndex: 'method',
       valueType: 'select',
       fieldProps: {
-        as: ProFormSelect, // 指定字段组件为 ProFormSelect
+        as: ProFormSelect,
         options: [
           { label: 'GET', value: 'GET' },
           { label: 'POST', value: 'POST' },
@@ -203,52 +161,39 @@ const TableList: React.FC = () => {
           { label: 'PATCH', value: 'PATCH' },
         ],
       },
-      formItemProps: {
-        rules: [
-          {
-            required: true,
-          },
-        ],
-      },
+      formItemProps: { rules: [{ required: true }] },
     },
     {
       title: 'url',
       dataIndex: 'url',
       valueType: 'text',
-      formItemProps: {
-        rules: [{
-          required: true,
-        }]
-      }
+      formItemProps: { rules: [{ required: true }] },
     },
     {
       title: '请求参数',
       dataIndex: 'requestParams',
       valueType: 'jsonCode',
+      formItemProps: { rules: [{ required: true }] },
     },
     {
       title: '请求头',
       dataIndex: 'requestHeader',
       valueType: 'jsonCode',
+      formItemProps: { rules: [{ required: true }] },
     },
     {
       title: '响应头',
       dataIndex: 'responseHeader',
       valueType: 'jsonCode',
+      formItemProps: { rules: [{ required: true }] },
     },
     {
       title: '状态',
       dataIndex: 'status',
       hideInForm: true,
       valueEnum: {
-        0: {
-          text: '关闭',
-          status: 'Default',
-        },
-        1: {
-          text: '开启',
-          status: 'Processing',
-        },
+        0: { text: '关闭', status: 'Default' },
+        1: { text: '开启', status: 'Processing' },
       },
     },
     {
@@ -278,7 +223,7 @@ const TableList: React.FC = () => {
           修改
         </a>,
         <Button
-          type={record.status === 1 ? "text" : "link"}
+          type={record.status === 1 ? 'text' : 'link'}
           danger={record.status === 1}
           key="online"
           onClick={() => {
@@ -302,17 +247,16 @@ const TableList: React.FC = () => {
           删除
         </Button>,
       ],
-    }
+    },
   ];
+
   return (
     <PageContainer>
       <ProTable<API.RuleListItem, API.PageParams>
         headerTitle={'查询表格'}
         actionRef={actionRef}
         rowKey="id"
-        search={{
-          labelWidth: 120,
-        }}
+        search={{ labelWidth: 120 }}
         toolBarRender={() => [
           <Button
             type="primary"
@@ -324,14 +268,10 @@ const TableList: React.FC = () => {
             <PlusOutlined /> 新建
           </Button>,
         ]}
-        request={async (
-          params,
-          //sort: Record<string, SortOrder>,
-          //filter: Record<string, (string | number)[] | null>,
-        ) => {
+        request={async (params) => {
           const res: any = await listInterfaceInfoByPageUsingGet({
             ...params,
-          });
+          } as API.listInterfaceInfoByPageUsingGETParams);
           if (res?.data) {
             return {
               data: res?.data.records || [],
@@ -349,7 +289,7 @@ const TableList: React.FC = () => {
         columns={columns}
         rowSelection={{
           onChange: (_, selectedRows) => {
-            setSelectedRows(selectedRows);
+            setSelectedRows(selectedRows as API.InterfaceInfo[]);
           },
         }}
       />
@@ -357,18 +297,14 @@ const TableList: React.FC = () => {
         <FooterToolbar
           extra={
             <div>
-              已选择{' '}
-              <a style={{ fontWeight: 600 }}>
-                {selectedRowsState.length}
-              </a>{' '}
-              项
+              已选择 <a style={{ fontWeight: 600 }}>{selectedRowsState.length}</a> 项
             </div>
           }
         >
           <Button
             danger
             onClick={async () => {
-              await handleRemove(selectedRowsState);
+              await handleRemove(selectedRowsState[0]);
               setSelectedRows([]);
               actionRef.current?.reloadAndRest?.();
             }}
@@ -386,7 +322,7 @@ const TableList: React.FC = () => {
             handleUpdateModalOpen(false);
             setCurrentRow(undefined);
             if (actionRef.current) {
-              actionRef.current.reload();
+              actionRef.current?.reload();
             }
           }
         }}
@@ -429,11 +365,15 @@ const TableList: React.FC = () => {
           handleModalOpen(false);
         }}
         onSubmit={async (values) => {
-          await handleAdd(values);  // 忽略返回值
+          const success = await handleAdd(values);
+          if (success) {
+            actionRef.current?.reload();
+          }
         }}
         open={createModalOpen}
       />
     </PageContainer>
   );
 };
+
 export default TableList;

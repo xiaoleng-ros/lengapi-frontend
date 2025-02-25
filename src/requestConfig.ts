@@ -53,10 +53,6 @@ export const errorConfig = {
               message.error(errorMessage);
               break;
             case ErrorShowType.NOTIFICATION:
-              // notification.open({
-              //   description: errorMessage,
-              //   message: errorCode,
-              // });
               break;
             case ErrorShowType.REDIRECT:
               // TODO: redirect
@@ -96,8 +92,11 @@ interface RequestConfig {
 
 // 导出请求配置
 export const requestConfig: RequestConfig = {
-  baseURL: 'http://localhost:8101',
-  withCredentials: true,
+  // baseURL: 'http://localhost:8101', // 让前端请求发到指定后端
+  // baseURL: 'http://119.91.248.232:8101', // 线上部署的地址
+  baseURL:
+    process.env.NODE_ENV === 'production' ? 'http://119.91.248.232:8102' : 'http://localhost:8101/', // 线上部署的地址
+  withCredentials: true, // 请求时带上cookie
   ...errorConfig,
 
   // 请求拦截器

@@ -33,7 +33,7 @@ const Index: React.FC = () => {
 
   // @ts-ignore
   return (
-    <PageContainer title="API在线接口平台">
+    <PageContainer>
       <List
         className="my-list"
         loading={loading}
