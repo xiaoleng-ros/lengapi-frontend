@@ -1,5 +1,13 @@
 ﻿import type { RequestOptions } from '@@/plugin-request/request';
 import { message } from 'antd';
+import {
+  getRefreshToken,
+  getToken,
+  isTokenExpired,
+  logout,
+  setRefreshToken,
+  setToken,
+} from './utils/auth';
 
 // 错误处理方案： 错误类型
 enum ErrorShowType {
@@ -24,7 +32,7 @@ export const errorConfig = {
   // 错误处理： umi@3 的错误处理方案。
   errorConfig: {
     // 错误抛出
-    errorThrower: (res) => {
+    errorThrower: (res: unknown) => {
       const { success, data, errorCode, errorMessage, showType } =
         res as unknown as ResponseStructure;
       if (!success) {
@@ -90,31 +98,108 @@ interface RequestConfig {
   };
 }
 
+interface RefreshResponse {
+  success: boolean;
+  data: {
+    token: string;
+    refreshToken: string;
+  };
+}
+
 // 导出请求配置
 export const requestConfig: RequestConfig = {
-  // baseURL: 'http://localhost:8101', // 让前端请求发到指定后端
-  // baseURL: 'http://119.91.248.232:8101', // 线上部署的地址
   baseURL:
-    process.env.NODE_ENV === 'production' ? 'http://119.91.248.232:8102' : 'http://localhost:8101/', // 线上部署的地址
-  withCredentials: true, // 请求时带上cookie
+    process.env.NODE_ENV === 'development'
+      ? '' // 开发环境使用相对路径，因为已经配置了代理
+      : 'https://119.91.248.232', // 生产环境使用实际的 API 地址
+  withCredentials: false, // JWT不需要携带cookie
+
   ...errorConfig,
 
   // 请求拦截器
   requestInterceptors: [
     (config: RequestOptions) => {
-      // 拦截请求配置，进行个性化处理。
-      const url = config?.url?.concat('');
+      // 添加token到请求头
+      const token = getToken();
+      if (token) {
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${token}`,
+        };
+      }
+
+      // 确保请求路径以/api开头
+      const url = config.url?.startsWith('/api') ? config.url : `/api${config.url}`;
       return { ...config, url };
     },
   ],
 
   // 响应拦截器
   responseInterceptors: [
-    (response) => {
-      // 拦截响应数据，进行个性化处理
-      const { data } = response as unknown as ResponseStructure;
+    async (response: Response & { config: RequestOptions; data: ResponseStructure }) => {
+      const { data, config } = response;
+
+      // 如果是刷新token的请求，直接返回
+      if (config.url?.includes('/auth/refresh')) {
+        return response;
+      }
+
+      // 检查token是否即将过期
+      const token = getToken();
+      if (token && isTokenExpired(token)) {
+        try {
+          const refreshToken = getRefreshToken();
+          if (!refreshToken) {
+            throw new Error('No refresh token');
+          }
+
+          // 发起刷新token请求
+          const refreshResult: RefreshResponse = await fetch(
+            `${requestConfig.baseURL}/auth/refresh`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${refreshToken}`,
+              },
+            },
+          ).then((res: Response) => res.json());
+
+          if (refreshResult.success) {
+            setToken(refreshResult.data.token);
+            setRefreshToken(refreshResult.data.refreshToken);
+
+            // 使用新token重试原请求
+            config.headers = {
+              ...config.headers,
+              Authorization: `Bearer ${refreshResult.data.token}`,
+            };
+
+            // 转换为 fetch 所需的格式
+            const fetchOptions: RequestInit = {
+              method: config.method,
+              headers: config.headers as HeadersInit,
+              body: config.data ? JSON.stringify(config.data) : undefined,
+              mode: 'cors',
+              credentials: config.withCredentials ? 'include' : 'same-origin',
+            };
+            return fetch(config.url || '', fetchOptions).then((res) => res.json());
+          } else {
+            throw new Error('Refresh token failed');
+          }
+        } catch (error) {
+          // 刷新token失败，登出用户
+          logout();
+          throw new Error('Session expired, please login again');
+        }
+      }
+
+      // 处理业务错误
       if (data?.success === false) {
-        message.error('请求失败！');
+        if (data.errorCode === 401) {
+          logout();
+        }
+        message.error(data.errorMessage || '请求失败！');
       }
       return response;
     },

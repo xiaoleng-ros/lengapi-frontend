@@ -48,12 +48,19 @@ export default [
     ],
   },
   {
+    path: '/profile',
+    name: '个人中心',
+    icon: 'UserOutlined',
+    component: './Profile',
+    hideInMenu: true,
+  },
+  {
     path: '/',
     redirect: '/welcome',
   },
-  {
-    path: '*',
-    layout: false,
-    component: './404',
-  },
+  // {
+  //   path: '*',
+  //   layout: false,
+  //   component: './404',
+  // },
 ];

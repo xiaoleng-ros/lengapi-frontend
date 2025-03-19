@@ -1,6 +1,7 @@
 import { Footer } from '@/components';
 import { getFakeCaptcha } from '@/services/ant-design-pro/login';
 import { userLoginUsingPost } from '@/services/lengapi-backend/userController';
+import { setRefreshToken, setToken } from '@/utils/auth';
 import {
   AlipayCircleOutlined,
   LockOutlined,
@@ -99,11 +100,17 @@ const Login: React.FC = () => {
         ...values,
       });
       if (res.data) {
+        const { token, refreshToken, user } = res.data;
+        // 保存token
+        setToken(token);
+        setRefreshToken(refreshToken);
+
         const urlParams = new URL(window.location.href).searchParams;
         history.push(urlParams.get('redirect') || '/');
-        setInitialState({
-          loginUser: res.data,
-        });
+        await setInitialState((s) => ({
+          ...s,
+          currentUser: user,
+        }));
         return;
       }
     } catch (error) {
