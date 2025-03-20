@@ -63,7 +63,16 @@ type RunTimeLayoutConfig = (params: {
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
-const defaultPath = '/interface_api'; // 修改为你想要的默认登录后跳转页面
+
+// 根据环境变量设置默认路径
+let defaultPath;
+if (isDev) {
+  // 本地开发环境的默认路径
+  defaultPath = '/interface_api';
+} else {
+  // 线上环境的默认路径，使用环境变量来设置
+  defaultPath = process.env.PRODUCTION_URL || 'http://119.91.248.232:8102/interface_api';
+}
 
 // 定义不需要登录就能访问的路径
 const PUBLIC_PATH = [
@@ -155,7 +164,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
                           await userLogoutUsingPost();
                           // 清除token
                           removeToken();
-                          await setInitialState((s) => ({
+                          setInitialState((s) => ({
                             ...s,
                             currentUser: undefined,
                           }));
@@ -199,7 +208,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       return (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <a onClick={() => history.push('/')} style={{ display: 'flex', alignItems: 'center' }}>
-            <img src="/logo.svg" alt="logo" style={{ height: '28px', marginRight: '12px' }} />
+            <img src="/favicon.ico" alt="logo" style={{ height: '28px', marginRight: '12px' }} />
             <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#000' }}>
               API 接口服务平台
             </h1>

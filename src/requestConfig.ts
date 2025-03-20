@@ -111,7 +111,7 @@ export const requestConfig: RequestConfig = {
   baseURL:
     process.env.NODE_ENV === 'development'
       ? '' // 开发环境使用相对路径，因为已经配置了代理
-      : 'https://119.91.248.232', // 生产环境使用实际的 API 地址
+      : process.env.API_URL || 'https://119.91.248.232:8102', // 生产环境使用实际的 API 地址
   withCredentials: false, // JWT不需要携带cookie
 
   ...errorConfig,

@@ -17,7 +17,7 @@ const Settings: ProLayoutProps & {
   colorWeak: false,
   title: 'API 接口服务平台',
   pwa: false,
-  logo: '/logo.svg',
+  logo: '/favicon.ico',
   iconfontUrl: '',
   token: {
     header: {
