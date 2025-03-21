@@ -67,9 +67,9 @@ const ActionIcons = () => {
   const { styles } = useStyles();
   return (
     <>
-      <AlipayCircleOutlined key="AlipayCircleOutlined" className={styles.action} />
-      <TaobaoCircleOutlined key="TaobaoCircleOutlined" className={styles.action} />
-      <WeiboCircleOutlined key="WeiboCircleOutlined" className={styles.action} />
+      <AlipayCircleOutlined key="AlipayCircleOutlined" className={(styles as any).action} />
+      <TaobaoCircleOutlined key="TaobaoCircleOutlined" className={(styles as any).action} />
+      <WeiboCircleOutlined key="WeiboCircleOutlined" className={(styles as any).action} />
     </>
   );
 };
@@ -93,6 +93,9 @@ const Login: React.FC = () => {
   const { setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
 
+  // 显式断言 styles 的类型
+  const containerStyle = (styles as Record<string, string>).container;
+
   const handleSubmit = async (values: API.UserLoginRequest) => {
     try {
       // 登录
@@ -111,17 +114,20 @@ const Login: React.FC = () => {
           ...s,
           currentUser: user,
         }));
+        // 登录成功提示
+        message.success('登录成功');
         return;
       }
     } catch (error) {
-      const defaultLoginFailureMessage = '登录失败，请重试！';
+      const defaultLoginFailureMessage = '登陆失败,用户不存在或密码错误';
       console.log(error);
+      // 使用 LoginMessage 组件显示错误信息
       message.error(defaultLoginFailureMessage);
     }
   };
   const { status, type: loginType } = userLoginState;
   return (
-    <div className={styles.container}>
+    <div className={containerStyle}>
       <Helmet>
         <title>
           {'登录'}- {Settings.title}

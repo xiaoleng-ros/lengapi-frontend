@@ -26,8 +26,29 @@ const Register: React.FC = () => {
   const { styles } = useStyles();
 
   const handleSubmit = async (values: API.UserRegisterRequest) => {
-    const { userPassword, checkPassword } = values;
-    // 校验
+    const { userName, userAccount, userPassword, checkPassword } = values;
+
+    // 前端校验
+    if (!userName || !userAccount || !userPassword || !checkPassword) {
+      message.error('参数为空');
+      return;
+    }
+
+    if (userName.length > 6) {
+      message.error('用户昵称过长');
+      return;
+    }
+
+    if (userAccount.length < 4) {
+      message.error('用户账号过短');
+      return;
+    }
+
+    if (userPassword.length < 8 || checkPassword.length < 8) {
+      message.error('用户密码过短');
+      return;
+    }
+
     if (userPassword !== checkPassword) {
       message.error('两次输入的密码不一致');
       return;
@@ -45,8 +66,13 @@ const Register: React.FC = () => {
         return;
       }
     } catch (error: any) {
-      const defaultLoginFailureMessage = '注册失败，请重试！';
-      message.error(defaultLoginFailureMessage);
+      // 后端校验错误提示
+      if (error.response && error.response.data && error.response.data.message) {
+        message.error(error.response.data.message);
+      } else {
+        const defaultLoginFailureMessage = '注册失败，请重试！';
+        message.error(defaultLoginFailureMessage);
+      }
     }
   };
 
@@ -102,8 +128,9 @@ const Register: React.FC = () => {
                   },
                   {
                     min: 2,
+                    max: 4,
                     type: 'string',
-                    message: '昵称长度不能小于 2',
+                    message: '昵称长度不能大于 6',
                   },
                 ]}
               />
@@ -118,6 +145,11 @@ const Register: React.FC = () => {
                   {
                     required: true,
                     message: '账号是必填项！',
+                  },
+                  {
+                    min: 4,
+                    type: 'string',
+                    message: '账号长度不能小于 4',
                   },
                 ]}
               />

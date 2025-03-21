@@ -2,7 +2,7 @@ import { uploadFileUsingPost } from '@/services/lengapi-backend/fileController';
 import { updateMyUserUsingPost } from '@/services/lengapi-backend/userController';
 import { CopyOutlined, UploadOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
-import { Avatar, Button, Card, Form, Input, message, Modal, Select, Upload } from 'antd';
+import { Avatar, Button, Card, Form, Input, message, Modal, Select, Space, Upload } from 'antd';
 import React, { useState } from 'react';
 
 // 在文件顶部添加类型定义
@@ -87,10 +87,12 @@ const Profile: React.FC = () => {
 
   // 修改 useEffect：无论是否编辑，只要用户数据变化就更新表单
   React.useEffect(() => {
-    form.setFieldsValue({
-      userName: currentUser?.userName,
-      gender: currentUser?.gender,
-    });
+    if (currentUser) {
+      form.setFieldsValue({
+        userName: currentUser.userName || currentUser.userAccount,
+        gender: currentUser.gender,
+      });
+    }
   }, [currentUser]); // 依赖项改为 currentUser
 
   const onFinish = async (values: any) => {
@@ -141,7 +143,7 @@ const Profile: React.FC = () => {
               绑定邮箱
             </Button>
             <Modal
-              visible={isModalVisible}
+              open={isModalVisible}
               onCancel={handleCancel}
               footer={null}
               closable={false}
@@ -157,7 +159,7 @@ const Profile: React.FC = () => {
                   <Input placeholder="请输入邮箱地址" />
                 </Form.Item>
                 <Form.Item style={{ marginBottom: '16px' }}>
-                  <Input.Group compact>
+                  <Space.Compact>
                     <Form.Item
                       name="verificationCode"
                       noStyle
@@ -172,7 +174,7 @@ const Profile: React.FC = () => {
                     >
                       获取验证码
                     </Button>
-                  </Input.Group>
+                  </Space.Compact>
                 </Form.Item>
                 <Form.Item>
                   <Button type="primary" htmlType="submit" block style={{ marginTop: '16px' }}>
@@ -247,7 +249,7 @@ const Profile: React.FC = () => {
                   <Input
                     disabled={!isEditing}
                     placeholder="请输入昵称（最多6个字符）"
-                    bordered={isEditing}
+                    variant={isEditing ? 'outlined' : 'borderless'}
                     style={{
                       width: '12em',
                       color: 'rgba(0, 0, 0, 0.85)',
@@ -269,7 +271,7 @@ const Profile: React.FC = () => {
                     </Form.Item>
                   ) : (
                     <Input
-                      bordered={false}
+                      variant="borderless"
                       readOnly
                       value={genderText(currentUser?.gender)} // 直接读 currentUser
                       style={{
@@ -281,11 +283,11 @@ const Profile: React.FC = () => {
                 </Form.Item>
 
                 <Form.Item label="我的ID">
-                  <Input.Group compact>
+                  <Space.Compact>
                     <Input
                       value={currentUser?.id}
                       disabled
-                      bordered={false}
+                      variant="borderless"
                       style={{
                         width: '12em',
                         color: 'rgba(0, 0, 0, 0.85)',
@@ -297,14 +299,14 @@ const Profile: React.FC = () => {
                       icon={<CopyOutlined />}
                       onClick={() => handleCopy(currentUser?.id?.toString() || '')}
                     />
-                  </Input.Group>
+                  </Space.Compact>
                 </Form.Item>
 
                 <Form.Item label="我的邮箱">
                   <Input
                     value={currentUser?.email || '未绑定邮箱'}
                     disabled
-                    bordered={false}
+                    variant="borderless"
                     style={{
                       width: '12em',
                       color: 'rgba(0, 0, 0, 0.85)',
