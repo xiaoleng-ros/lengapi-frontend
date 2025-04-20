@@ -1,28 +1,34 @@
 import { listInterfaceInfoByPageUsingGet } from '@/services/lengapi-backend/interfaceInfoController';
 import { PageContainer } from '@ant-design/pro-components';
+import { history } from '@umijs/max';
 import { List, message } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 /**
- *
- * @constructor
+ * 接口广场页面
+ * 展示所有可用的API接口
  */
 const Index: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [list, setList] = useState<API.InterfaceInfo[]>([]);
   const [total, setTotal] = useState<number>(0);
 
-  const loadData = async (current = 1, pageSize = 5) => {
+  const loadData = async (current = 1, pageSize = 10) => {
     setLoading(true);
     try {
       const res = await listInterfaceInfoByPageUsingGet({
         current,
         pageSize,
       });
-      setList(res?.data?.records || []);
-      setTotal(res?.data?.total || 0);
+
+      if (res?.data) {
+        setList(res.data.records || []);
+        setTotal(res.data.total || 0);
+      } else {
+        message.error('获取数据失败');
+      }
     } catch (error: any) {
-      message.error('请求失败' + error.message);
+      message.error('请求失败：' + (error.message || '未知错误'));
     }
     setLoading(false);
   };
@@ -31,26 +37,32 @@ const Index: React.FC = () => {
     loadData();
   }, []);
 
-  // @ts-ignore
+  const handleViewDetail = (id: number | undefined) => {
+    if (id) {
+      history.push(`/interface_info/${id}`);
+    } else {
+      message.error('接口ID不存在');
+    }
+  };
+
   return (
-    <PageContainer>
+    <PageContainer title="API接口广场">
       <List
         className="my-list"
         loading={loading}
         itemLayout="horizontal"
         dataSource={list}
         renderItem={(item) => {
-          const apiLink = `/interface_info/${item.id}`;
           return (
             <List.Item
               actions={[
-                <a key={item.id} href={apiLink}>
+                <a key={item.id} onClick={() => handleViewDetail(item.id)}>
                   查看
                 </a>,
               ]}
             >
               <List.Item.Meta
-                title={<a href={apiLink}>{item.name}</a>}
+                title={<a onClick={() => handleViewDetail(item.id)}>{item.name}</a>}
                 description={item.description}
               />
             </List.Item>
@@ -60,7 +72,7 @@ const Index: React.FC = () => {
           showTotal(total: number) {
             return '总数:' + total;
           },
-          pageSize: 5,
+          pageSize: 10,
           total: total,
           onChange(page, pageSize) {
             loadData(page, pageSize);

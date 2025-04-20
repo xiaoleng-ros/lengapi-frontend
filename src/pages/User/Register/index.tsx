@@ -1,6 +1,6 @@
 import { Footer } from '@/components';
 import { userRegisterUsingPost } from '@/services/lengapi-backend/userController';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import { GiftOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
 import { LoginForm, ProFormText } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
 import { message, Tabs } from 'antd';
@@ -63,9 +63,9 @@ const Register: React.FC = () => {
             minWidth: 280,
             maxWidth: '75vw',
           }}
-          logo={<img alt="logo" src="/logo.svg" />}
-          title="Ant Design"
-          subTitle={'Ant Design 是西湖区最具影响力的 Web 设计规范'}
+          logo={<img alt="logo" src="/favicon.ico" />}
+          title="API 接口应用平台"
+          subTitle={'API 接口应用平台为用户和开发者提供全面 API 接口调用服务'}
           submitter={{
             searchConfig: {
               submitText: '注册',
@@ -89,16 +89,35 @@ const Register: React.FC = () => {
           {type === 'account' && (
             <>
               <ProFormText
+                name="userName"
+                fieldProps={{
+                  size: 'large',
+                  prefix: <LockOutlined />,
+                }}
+                placeholder={'请输入昵称'}
+                rules={[
+                  {
+                    required: true,
+                    message: '昵称是必填项！',
+                  },
+                  {
+                    min: 2,
+                    type: 'string',
+                    message: '昵称长度不能小于 2',
+                  },
+                ]}
+              />
+              <ProFormText
                 name="userAccount"
                 fieldProps={{
                   size: 'large',
                   prefix: <UserOutlined />,
                 }}
-                placeholder={'请输入用户名'}
+                placeholder={'请输入账号'}
                 rules={[
                   {
                     required: true,
-                    message: '用户名是必填项！',
+                    message: '账号是必填项！',
                   },
                 ]}
               />
@@ -139,6 +158,14 @@ const Register: React.FC = () => {
                     message: '密码长度不能小于 8',
                   },
                 ]}
+              />
+              <ProFormText
+                name="inviteCode"
+                fieldProps={{
+                  size: 'large',
+                  prefix: <GiftOutlined />,
+                }}
+                placeholder={'请输入邀请码,没有可不填'}
               />
             </>
           )}

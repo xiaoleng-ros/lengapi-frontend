@@ -52,7 +52,7 @@ export async function invokeInterfaceInfoUsingPost(
   body: API.InterfaceInfoInvokeRequest,
   options?: { [key: string]: any },
 ) {
-  return request<API.BaseResponseObject_>('/api/interfaceInfo/invoke', {
+  return request<API.BaseResponseMapStringObject_>('/api/interfaceInfo/invoke', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -124,23 +124,8 @@ export async function onlineInterfaceInfoUsingPost(
 
 /** updateInterfaceInfo POST /api/interfaceInfo/update */
 export async function updateInterfaceInfoUsingPost(
-  body: {
-    method?: string;
-    isDelete?: number;
-    responseHeader?: string;
-    description?: string;
-    requestParams?: string;
-    updateTime?: string;
-    userId?: number;
-    url?: string;
-    createTime?: string;
-    interfaceTotal?: number;
-    name?: string;
-    requestHeader?: string;
-    id: number | undefined;
-    status?: number;
-  },
-  options?: { [p: string]: any },
+  body: API.InterfaceInfoUpdateRequest,
+  options?: { [key: string]: any },
 ) {
   return request<API.BaseResponseBoolean_>('/api/interfaceInfo/update', {
     method: 'POST',

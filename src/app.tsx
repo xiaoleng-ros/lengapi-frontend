@@ -1,13 +1,15 @@
 import { Footer } from '@/components';
+import AvatarDropdown from '@/components/AvatarDropdown';
 import {
   getLoginUserUsingGet,
   userLogoutUsingPost,
 } from '@/services/lengapi-backend/userController';
-import { DownOutlined, UserOutlined } from '@ant-design/icons';
+import { getToken, removeToken } from '@/utils/auth';
+import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { Button, Dropdown, Space } from 'antd';
+import { App as AntdApp } from 'antd';
 import React from 'react';
 import defaultSettings from '../config/defaultSettings';
 import { requestConfig } from './requestConfig';
@@ -75,14 +77,14 @@ const PUBLIC_PATH = [
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
  * */
-export async function getInitialState(): Promise<{
-  settings?: Partial<LayoutSettings>;
-  currentUser?: API.LoginUserVO;
-  loading?: boolean;
-  fetchUserInfo?: () => Promise<API.LoginUserVO | undefined>;
-}> {
+export async function getInitialState(): Promise<InitialState> {
   const fetchUserInfo = async () => {
     try {
+      // 如果没有token，直接返回undefined
+      const token = getToken();
+      if (!token) {
+        return undefined;
+      }
       const msg = await getLoginUserUsingGet();
       return msg.data;
     } catch (error) {
@@ -94,7 +96,7 @@ export async function getInitialState(): Promise<{
   const currentUser = await fetchUserInfo();
 
   return {
-    fetchUserInfo, // 导出 fetchUserInfo 方法供其他地方使用
+    fetchUserInfo,
     currentUser,
     settings: { ...defaultSettings } as Partial<LayoutSettings>,
   };
@@ -124,73 +126,80 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     fixedHeader: true,
 
     avatarProps: {
-      render: () => (
-        <Dropdown
-          menu={{
-            items: initialState?.currentUser
-              ? [
-                  {
-                    key: 'register',
-                    label: <a onClick={() => history.push('/user/register')}>注册</a>,
-                  },
-                  {
-                    key: 'logout',
-                    label: (
-                      <a
-                        onClick={async () => {
-                          try {
-                            // 调用后端登出接口
-                            await userLogoutUsingPost();
-                            // 清除前端状态
-                            await setInitialState((s) => ({
-                              ...s,
-                              currentUser: undefined,
-                            }));
-                            history.push('/welcome');
-                          } catch (error) {
-                            console.error('退出登录失败:', error);
-                          }
-                        }}
-                      >
-                        退出登录
-                      </a>
-                    ),
-                  },
-                ]
-              : [
-                  {
-                    key: 'login',
-                    label: <a onClick={() => history.push('/user/login')}>登录</a>,
-                  },
-                  {
-                    key: 'register',
-                    label: <a onClick={() => history.push('/user/register')}>注册</a>,
-                  },
-                ],
-          }}
-          trigger={['click']}
-          placement="bottomRight"
-        >
-          <span style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
-            <Button type="text">
-              <Space>
-                <UserOutlined />
-                {initialState?.currentUser ? initialState.currentUser.userName : '账号'}
-                <DownOutlined />
-              </Space>
-            </Button>
-          </span>
-        </Dropdown>
-      ),
+      render: () => {
+        const handleLogin = () => {
+          window.location.href = '/user/login';
+        };
+
+        const handleRegister = () => {
+          window.location.href = '/user/register';
+        };
+
+        return (
+          <AvatarDropdown
+            items={
+              initialState?.currentUser
+                ? [
+                    {
+                      key: 'profile',
+                      icon: <UserOutlined />,
+                      label: '个人中心',
+                      onClick: () => history.push('/profile'),
+                    },
+                    {
+                      key: 'logout',
+                      icon: <LogoutOutlined />,
+                      label: '退出登录',
+                      onClick: async () => {
+                        try {
+                          await userLogoutUsingPost();
+                          // 清除token
+                          removeToken();
+                          await setInitialState((s) => ({
+                            ...s,
+                            currentUser: undefined,
+                          }));
+                          history.push('/welcome');
+                        } catch (error) {
+                          console.error('退出登录失败:', error);
+                        }
+                      },
+                    },
+                  ]
+                : [
+                    {
+                      key: 'login',
+                      label: '登录',
+                      onClick: handleLogin,
+                    },
+                    {
+                      key: 'register',
+                      label: '注册',
+                      onClick: handleRegister,
+                    },
+                  ]
+            }
+            currentUser={
+              initialState?.currentUser
+                ? {
+                    userName: initialState.currentUser.userName || '未知用户',
+                    userAvatar: initialState.currentUser.userAvatar,
+                  }
+                : { userName: '游客' }
+            }
+            isGuest={!initialState?.currentUser}
+          />
+        );
+      },
     },
     waterMarkProps: {
-      content: initialState?.currentUser?.userName,
+      content: initialState?.currentUser ? initialState?.currentUser?.userName : '游客',
     },
     headerTitleRender: () => {
       return (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <a onClick={() => history.push('/')} style={{ display: 'flex', alignItems: 'center' }}>
-            <img src="/logo.svg" alt="logo" style={{ height: '28px', marginRight: '12px' }} />
+            <img src="/favicon.ico" alt="logo" style={{ height: '28px', marginRight: '12px' }} />
             <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#000' }}>
               API 接口服务平台
             </h1>
@@ -240,7 +249,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     // 增加一个 loading 的状态
     childrenRender: (children) => {
       return (
-        <>
+        <AntdApp>
           {children}
           {isDev && initialState?.settings && (
             <SettingDrawer
@@ -255,7 +264,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
               }}
             />
           )}
-        </>
+        </AntdApp>
       );
     },
   };

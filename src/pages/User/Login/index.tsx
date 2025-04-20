@@ -1,6 +1,7 @@
 import { Footer } from '@/components';
 import { getFakeCaptcha } from '@/services/ant-design-pro/login';
 import { userLoginUsingPost } from '@/services/lengapi-backend/userController';
+import { setRefreshToken, setToken } from '@/utils/auth';
 import {
   AlipayCircleOutlined,
   LockOutlined,
@@ -66,9 +67,9 @@ const ActionIcons = () => {
   const { styles } = useStyles();
   return (
     <>
-      <AlipayCircleOutlined key="AlipayCircleOutlined" className={styles.action} />
-      <TaobaoCircleOutlined key="TaobaoCircleOutlined" className={styles.action} />
-      <WeiboCircleOutlined key="WeiboCircleOutlined" className={styles.action} />
+      <AlipayCircleOutlined key="AlipayCircleOutlined" className={(styles as any).action} />
+      <TaobaoCircleOutlined key="TaobaoCircleOutlined" className={(styles as any).action} />
+      <WeiboCircleOutlined key="WeiboCircleOutlined" className={(styles as any).action} />
     </>
   );
 };
@@ -92,6 +93,9 @@ const Login: React.FC = () => {
   const { setInitialState } = useModel('@@initialState');
   const { styles } = useStyles();
 
+  // 显式断言 styles 的类型
+  const containerStyle = (styles as Record<string, string>).container;
+
   const handleSubmit = async (values: API.UserLoginRequest) => {
     try {
       // 登录
@@ -99,22 +103,31 @@ const Login: React.FC = () => {
         ...values,
       });
       if (res.data) {
+        const { token, refreshToken, user } = res.data;
+        // 保存token
+        setToken(token);
+        setRefreshToken(refreshToken);
+
         const urlParams = new URL(window.location.href).searchParams;
         history.push(urlParams.get('redirect') || '/');
-        setInitialState({
-          loginUser: res.data,
-        });
+        await setInitialState((s) => ({
+          ...s,
+          currentUser: user,
+        }));
+        // 登录成功提示
+        message.success('登录成功');
         return;
       }
     } catch (error) {
-      const defaultLoginFailureMessage = '登录失败，请重试！';
+      const defaultLoginFailureMessage = '登陆失败,用户不存在或密码错误';
       console.log(error);
+      // 使用 LoginMessage 组件显示错误信息
       message.error(defaultLoginFailureMessage);
     }
   };
   const { status, type: loginType } = userLoginState;
   return (
-    <div className={styles.container}>
+    <div className={containerStyle}>
       <Helmet>
         <title>
           {'登录'}- {Settings.title}
@@ -131,7 +144,7 @@ const Login: React.FC = () => {
             minWidth: 280,
             maxWidth: '75vw',
           }}
-          logo={<img alt="logo" src="/logo.svg" />}
+          logo={<img alt="logo" src="/favicon.ico" />}
           title="API 接口应用平台"
           subTitle={'API 接口应用平台为用户和开发者提供全面 API 接口调用服务 '}
           initialValues={{
