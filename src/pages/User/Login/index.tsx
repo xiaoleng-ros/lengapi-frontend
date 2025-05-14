@@ -108,7 +108,7 @@ const Login: React.FC = () => {
               userPassword: values.userPassword,
             }
           : {
-              email: values.userEmail,
+              email: values.email, // 修改这里，从 userEmail 改为 email
               verificationCode: values.verificationCode,
             };
 
@@ -241,9 +241,9 @@ const Login: React.FC = () => {
                 fieldProps={{
                   size: 'large',
                   prefix: <MailOutlined />,
-                  id: 'userEmail', // 添加id属性，便于获取
+                  id: 'email', // 修改这里，从 userEmail 改为 email
                 }}
-                name="userEmail"
+                name="email" // 修改这里，从 userEmail 改为 email
                 placeholder={'请输入邮箱'}
                 rules={[
                   {
@@ -281,7 +281,7 @@ const Login: React.FC = () => {
                 ]}
                 onGetCaptcha={async () => {
                   // 直接从表单中获取邮箱值
-                  const emailInput = document.getElementById('userEmail') as HTMLInputElement;
+                  const emailInput = document.getElementById('email') as HTMLInputElement; // 修改这里，从 userEmail 改为 email
                   const email = emailInput?.value;
 
                   // 验证邮箱是否为空
