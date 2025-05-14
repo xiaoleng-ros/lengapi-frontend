@@ -45,6 +45,12 @@ export default [
         component: './Admin/InterfaceAnalysis',
         access: 'canAdmin',
       },
+      {
+        path: '/admin/user_management',
+        name: '用户管理',
+        component: './Admin/UserManagement',
+        access: 'canAdmin',
+      },
     ],
   },
   {

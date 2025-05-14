@@ -1,6 +1,10 @@
 import { uploadFileUsingPost } from '@/services/lengapi-backend/fileController';
-import { updateMyUserUsingPost } from '@/services/lengapi-backend/userController';
-import { CopyOutlined, UploadOutlined } from '@ant-design/icons';
+import {
+  getLoginUserUsingGet,
+  resetUserKeyUsingPost,
+  updateMyUserUsingPost,
+} from '@/services/lengapi-backend/userController';
+import { CopyOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { Avatar, Button, Card, Form, Input, message, Modal, Select, Space, Upload } from 'antd';
 import React, { useState } from 'react';
@@ -10,8 +14,10 @@ interface CurrentUser extends API.LoginUserVO {
   email: string;
   gender: number;
   inviteCode?: string;
-  userAccount?: string; // 添加 userAccount 类型
-  userAvatar?: string; // 添加 userAvatar 类型
+  userAccount?: string;
+  userAvatar?: string;
+  accessKey?: string; // 添加 accessKey 字段
+  secretKey?: string; // 添加 secretKey 字段
 }
 
 const Profile: React.FC = () => {
@@ -348,6 +354,95 @@ const Profile: React.FC = () => {
               </div>
             </Form>
           </div>
+        </div>
+      </Card>
+
+      {/* AccessKey展示模块 */}
+      <Card
+        title="开发者凭证（调用接口的凭证）"
+        style={{ marginTop: '24px' }}
+        extra={
+          <Button
+            type="primary"
+            onClick={async () => {
+              try {
+                const res = await resetUserKeyUsingPost();
+                if (res.code === 0) {
+                  message.success('凭证更新成功');
+                  // 重新获取用户信息以更新显示
+                  const userInfo = await getLoginUserUsingGet();
+                  if (userInfo.data) {
+                    setInitialState((s) => ({
+                      ...s,
+                      currentUser: userInfo.data,
+                    }));
+                  }
+                } else {
+                  message.error('凭证更新失败：' + res.message);
+                }
+              } catch (error: any) {
+                message.error('凭证更新失败：' + error.message);
+              }
+            }}
+          >
+            更新凭证
+          </Button>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <Form.Item label="AccessKey">
+            <Input.Group compact>
+              <Input
+                value={currentUser?.accessKey || '暂无AccessKey'}
+                disabled
+                bordered={false}
+                style={{
+                  width: '300px',
+                  color: 'rgba(0, 0, 0, 0.85)',
+                  WebkitTextFillColor: 'rgba(0, 0, 0, 0.85) !important',
+                }}
+                variant="borderless"
+              />
+              <Button
+                type="link"
+                icon={<CopyOutlined />}
+                onClick={() => handleCopy(currentUser?.accessKey || '')}
+              />
+            </Input.Group>
+          </Form.Item>
+
+          <Form.Item label="SecretKey">
+            <Input.Group compact>
+              <Input
+                value={currentUser?.secretKey || '暂无SecretKey'}
+                disabled
+                bordered={false}
+                style={{
+                  width: '300px',
+                  color: 'rgba(0, 0, 0, 0.85)',
+                  WebkitTextFillColor: 'rgba(0, 0, 0, 0.85) !important',
+                }}
+                variant="borderless"
+              />
+              <Button
+                type="link"
+                icon={<CopyOutlined />}
+                onClick={() => handleCopy(currentUser?.secretKey || '')}
+              />
+            </Input.Group>
+          </Form.Item>
+        </div>
+      </Card>
+
+      {/* 开发者SDK模块 */}
+      <Card title="开发者SDK（快速接入API接口）" style={{ marginTop: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={() => window.open('https://github.com/xiaoleng-ros/lengapi-backend', '_blank')}
+          >
+            Java SDK
+          </Button>
         </div>
       </Card>
     </div>

@@ -43,10 +43,19 @@ const Register: React.FC = () => {
         // 注册成功后跳转到登录页
         history.push('/user/login');
         return;
+      } else {
+        message.error('注册失败，' + (res.message || '请重试！'));
       }
     } catch (error: any) {
-      const defaultLoginFailureMessage = '注册失败，请重试！';
-      message.error(defaultLoginFailureMessage);
+      // 处理具体的错误情况
+      const errorMessage = error.response?.data?.message || error.message || '注册失败，请重试！';
+
+      // 根据错误信息判断是否是账号重复
+      if (errorMessage.includes('账号重复')) {
+        message.error('该账号已被注册，请更换其他账号');
+      } else {
+        message.error(errorMessage);
+      }
     }
   };
 
@@ -82,7 +91,7 @@ const Register: React.FC = () => {
             items={[
               {
                 key: 'account',
-                label: '账户密码注册',
+                label: '账户注册',
               },
             ]}
           />

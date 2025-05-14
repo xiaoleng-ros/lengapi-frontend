@@ -15,7 +15,7 @@ const Settings: ProLayoutProps & {
   fixedHeader: true,
   fixSiderbar: true,
   colorWeak: false,
-  title: 'API 接口服务平台',
+  title: 'API 接口应用平台',
   pwa: false,
   logo: '/favicon.ico',
   iconfontUrl: '',

@@ -1,4 +1,9 @@
 declare namespace API {
+  type banUserUsingPOSTParams = {
+    /** userId */
+    userId: number;
+  };
+
   type BaseResponseBoolean_ = {
     code?: number;
     data?: boolean;
@@ -97,6 +102,11 @@ declare namespace API {
 
   type DeleteRequest = {
     id?: number;
+  };
+
+  type deleteUserUsingPOSTParams = {
+    /** userId */
+    userId: number;
   };
 
   type Field = {
@@ -246,8 +256,10 @@ declare namespace API {
   type LoginUserVO = {
     accessKey?: string;
     createTime?: string;
+    email?: string;
     gender?: number;
     id?: number;
+    phone?: string;
     secretKey?: string;
     token?: string;
     updateTime?: string;
@@ -313,6 +325,11 @@ declare namespace API {
     total?: number;
   };
 
+  type unbanUserUsingPOSTParams = {
+    /** userId */
+    userId: number;
+  };
+
   type uploadFileUsingPOSTParams = {
     /** biz */
     biz: string;
@@ -321,9 +338,11 @@ declare namespace API {
   type User = {
     accessKey?: string;
     createTime?: string;
+    email?: string;
     gender?: number;
     id?: number;
     isDelete?: number;
+    phone?: string;
     secretKey?: string;
     updateTime?: string;
     userAccount?: string;
@@ -338,6 +357,10 @@ declare namespace API {
     userAvatar?: string;
     userName?: string;
     userRole?: string;
+  };
+
+  type UserEmailRequest = {
+    email?: string;
   };
 
   type UserInterfaceInfo = {
@@ -367,37 +390,48 @@ declare namespace API {
   };
 
   type UserLoginRequest = {
+    email?: string;
     userAccount?: string;
     userPassword?: string;
+    verificationCode?: string;
   };
 
   type UserQueryRequest = {
     current?: number;
+    email?: string;
     gender?: number;
     id?: number;
     pageSize?: number;
+    phone?: string;
     sortField?: string;
     sortOrder?: string;
+    userAccount?: string;
     userName?: string;
     userRole?: string;
   };
 
   type UserRegisterRequest = {
     checkPassword?: string;
+    email?: string;
     userAccount?: string;
     userName?: string;
     userPassword?: string;
+    verificationCode?: string;
   };
 
   type UserUpdateMyRequest = {
+    email?: string;
     gender?: number;
+    phone?: string;
     userAvatar?: string;
     userName?: string;
   };
 
   type UserUpdateRequest = {
+    email?: string;
     gender?: number;
     id?: number;
+    phone?: string;
     userAvatar?: string;
     userName?: string;
     userRole?: string;
@@ -406,10 +440,14 @@ declare namespace API {
   type UserVO = {
     accessKey?: string;
     createTime?: string;
+    email?: string;
     gender?: number;
     id?: number;
+    phone?: string;
     secretKey?: string;
     status?: number;
+    updateTime?: string;
+    userAccount?: string;
     userAvatar?: string;
     userName?: string;
     userRole?: string;

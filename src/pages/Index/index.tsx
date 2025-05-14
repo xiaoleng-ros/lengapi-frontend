@@ -70,10 +70,8 @@ const Welcome: React.FC = () => {
             padding: '24px',
           }}
         >
-          <Title level={2}>欢迎使用 API 接口服务平台 🎉</Title>
-          <Paragraph>
-            API 接口服务平台是一个为用户和开发者提供全面 API 接口调用服务的平台 🚀
-          </Paragraph>
+          <Title level={2}>欢迎使用 API 接口平台 🎉</Title>
+          <Paragraph>API 接口应用平台是一个为用户和开发者提供全面 API 接口调用的平台 🚀</Paragraph>
 
           <Paragraph>
             <SmileOutlined />{' '}
@@ -87,7 +85,7 @@ const Welcome: React.FC = () => {
 
           <Paragraph>
             <ApiOutlined /> 您可以将自己的接口接入到 API
-            接口服务平台上，并发布给其他用户使用。您可以管理自己的各个接口，以便更好地分析和优化接口性能。
+            接口平台上，并发布给其他用户使用。您可以管理自己的各个接口，以便更好地分析和优化接口性能。
           </Paragraph>
 
           <Paragraph>
@@ -96,7 +94,7 @@ const Welcome: React.FC = () => {
 
           <Paragraph>
             <SafetyOutlined /> 无论您是用户还是开发者，API
-            接口服务平台都致力于提供安全、稳定、高效的接口调用服务，帮助您实现更快速、便捷的开发和调用体验。
+            接口平台都致力于提供安全、稳定、高效的接口调用服务，帮助您实现更快速、便捷的开发和调用体验。
           </Paragraph>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginTop: '40px' }}>

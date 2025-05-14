@@ -1,11 +1,13 @@
 import { Footer } from '@/components';
-import { getFakeCaptcha } from '@/services/ant-design-pro/login';
-import { userLoginUsingPost } from '@/services/lengapi-backend/userController';
+import {
+  sendVerificationCodeUsingPost,
+  userLoginUsingPost,
+} from '@/services/lengapi-backend/userController';
 import { setRefreshToken, setToken } from '@/utils/auth';
 import {
   AlipayCircleOutlined,
   LockOutlined,
-  MobileOutlined,
+  MailOutlined,
   TaobaoCircleOutlined,
   UserOutlined,
   WeiboCircleOutlined,
@@ -98,12 +100,35 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (values: API.UserLoginRequest) => {
     try {
+      // 根据登录类型处理不同的登录逻辑
+      const loginParams =
+        type === 'account'
+          ? {
+              userAccount: values.userAccount,
+              userPassword: values.userPassword,
+            }
+          : {
+              email: values.userEmail,
+              verificationCode: values.verificationCode,
+            };
+
       // 登录
-      const res = await userLoginUsingPost({
-        ...values,
-      });
+      const res = await userLoginUsingPost(loginParams);
       if (res.data) {
         const { token, refreshToken, user } = res.data;
+
+        // 检查用户状态
+        if (user.isDelete === 1) {
+          message.error('该账号已被注销，无法登录');
+          return;
+        }
+
+        // 检查用户是否被封禁
+        if (user.userRole === 'ban') {
+          message.error('该账号已被封禁，请联系管理员');
+          return;
+        }
+
         // 保存token
         setToken(token);
         setRefreshToken(refreshToken);
@@ -119,9 +144,9 @@ const Login: React.FC = () => {
         return;
       }
     } catch (error) {
-      const defaultLoginFailureMessage = '登陆失败,用户不存在或密码错误';
+      const defaultLoginFailureMessage =
+        type === 'account' ? '登录失败，用户不存在或密码错误' : '登录失败，邮箱或验证码错误';
       console.log(error);
-      // 使用 LoginMessage 组件显示错误信息
       message.error(defaultLoginFailureMessage);
     }
   };
@@ -140,13 +165,15 @@ const Login: React.FC = () => {
         }}
       >
         <LoginForm
+          // 删除 form 属性
+          // form={form}
           contentStyle={{
             minWidth: 280,
             maxWidth: '75vw',
           }}
           logo={<img alt="logo" src="/favicon.ico" />}
           title="API 接口应用平台"
-          subTitle={'API 接口应用平台为用户和开发者提供全面 API 接口调用服务 '}
+          subTitle={'API 接口应用平台为用户和开发者提供全面API接口调用 '}
           initialValues={{
             autoLogin: true,
           }}
@@ -162,17 +189,17 @@ const Login: React.FC = () => {
             items={[
               {
                 key: 'account',
-                label: '账户密码登录',
+                label: '账户登录',
               },
               {
-                key: 'mobile',
-                label: '手机号登录',
+                key: 'email',
+                label: '邮箱登录',
               },
             ]}
           />
 
           {status === 'error' && loginType === 'account' && (
-            <LoginMessage content={'错误的用户名和密码(admin/ant.design)'} />
+            <LoginMessage content={'错误的用户名和密码'} />
           )}
           {type === 'account' && (
             <>
@@ -182,7 +209,7 @@ const Login: React.FC = () => {
                   size: 'large',
                   prefix: <UserOutlined />,
                 }}
-                placeholder={'用户名: admin or user'}
+                placeholder={'请输入用户名'}
                 rules={[
                   {
                     required: true,
@@ -196,7 +223,7 @@ const Login: React.FC = () => {
                   size: 'large',
                   prefix: <LockOutlined />,
                 }}
-                placeholder={'密码: ant.design'}
+                placeholder={'请输入密码'}
                 rules={[
                   {
                     required: true,
@@ -207,24 +234,25 @@ const Login: React.FC = () => {
             </>
           )}
 
-          {status === 'error' && loginType === 'mobile' && <LoginMessage content="验证码错误" />}
-          {type === 'mobile' && (
+          {status === 'error' && loginType === 'email' && <LoginMessage content="验证码错误" />}
+          {type === 'email' && (
             <>
               <ProFormText
                 fieldProps={{
                   size: 'large',
-                  prefix: <MobileOutlined />,
+                  prefix: <MailOutlined />,
+                  id: 'userEmail', // 添加id属性，便于获取
                 }}
-                name="mobile"
-                placeholder={'请输入手机号！'}
+                name="userEmail"
+                placeholder={'请输入邮箱'}
                 rules={[
                   {
                     required: true,
-                    message: '手机号是必填项！',
+                    message: '邮箱是必填项！',
                   },
                   {
-                    pattern: /^1\d{10}$/,
-                    message: '不合法的手机号！',
+                    type: 'email',
+                    message: '不合法的邮箱格式！',
                   },
                 ]}
               />
@@ -236,28 +264,51 @@ const Login: React.FC = () => {
                 captchaProps={{
                   size: 'large',
                 }}
-                placeholder={'请输入验证码！'}
+                placeholder={'请输入验证码'}
                 captchaTextRender={(timing, count) => {
                   if (timing) {
-                    return `${count} ${'秒后重新获取'}`;
+                    return `${count} 秒后重新获取`;
                   }
                   return '获取验证码';
                 }}
-                name="captcha"
+                phoneName="userEmail" // 关键修改：指定关联的字段名为userEmail
+                name="verificationCode"
                 rules={[
                   {
                     required: true,
                     message: '验证码是必填项！',
                   },
                 ]}
-                onGetCaptcha={async (phone) => {
-                  const result = await getFakeCaptcha({
-                    phone,
-                  });
-                  if (!result) {
-                    return;
+                onGetCaptcha={async () => {
+                  // 直接从表单中获取邮箱值
+                  const emailInput = document.getElementById('userEmail') as HTMLInputElement;
+                  const email = emailInput?.value;
+
+                  // 验证邮箱是否为空
+                  if (!email || !email.trim()) {
+                    message.error('请先输入邮箱！');
+                    return Promise.reject('请先输入邮箱！');
                   }
-                  message.success('获取验证码成功！验证码为：1234');
+
+                  // 验证邮箱格式
+                  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                  if (!emailRegex.test(email)) {
+                    message.error('请输入正确的邮箱格式！');
+                    return Promise.reject('请输入正确的邮箱格式！');
+                  }
+
+                  try {
+                    const result = await sendVerificationCodeUsingPost({
+                      email: email.trim(),
+                    });
+                    if (result.data) {
+                      message.success('验证码发送成功！');
+                      return;
+                    }
+                  } catch (error) {
+                    message.error('验证码发送失败，请稍后重试！');
+                    return Promise.reject('验证码发送失败');
+                  }
                 }}
               />
             </>

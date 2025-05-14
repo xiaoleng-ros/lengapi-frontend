@@ -9,7 +9,7 @@ import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { App as AntdApp } from 'antd';
+import { App as AntdApp, Modal } from 'antd';
 import React from 'react';
 import defaultSettings from '../config/defaultSettings';
 import { requestConfig } from './requestConfig';
@@ -103,7 +103,73 @@ export async function getInitialState(): Promise<InitialState> {
 }
 
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
+// 添加超时检测的常量和状态
+const TIMEOUT_DURATION = 30 * 60 * 1000; // 30分钟
+let timeoutTimer: NodeJS.Timeout | null = null;
+let isTimeoutModalVisible = false;
+
+// 重置定时器
+const resetTimer = () => {
+  if (timeoutTimer) {
+    clearTimeout(timeoutTimer);
+  }
+  timeoutTimer = setTimeout(() => {
+    if (!isTimeoutModalVisible) {
+      isTimeoutModalVisible = true;
+      Modal.warning({
+        title: '操作超时提示',
+        content: '用户长时间未进行操作，请重新登录',
+        okText: '确定',
+        centered: true,
+        maskClosable: false,
+        keyboard: false,
+        onOk: () => {
+          isTimeoutModalVisible = false;
+          // 清除用户登录信息并跳转到登录页
+          localStorage.clear();
+          history.push('/user/login');
+        },
+      });
+    }
+  }, TIMEOUT_DURATION);
+};
+
+// 监听用户活动
+const setupActivityListener = () => {
+  const events = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'];
+  const handleActivity = () => {
+    if (!isTimeoutModalVisible) {
+      resetTimer();
+    }
+  };
+
+  events.forEach((event) => {
+    window.addEventListener(event, handleActivity);
+  });
+
+  // 初始化定时器
+  resetTimer();
+
+  return () => {
+    events.forEach((event) => {
+      window.removeEventListener(event, handleActivity);
+    });
+    if (timeoutTimer) {
+      clearTimeout(timeoutTimer);
+    }
+  };
+};
+
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+  // 在layout中添加活动监听
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  React.useEffect(() => {
+    // 只有在用户登录状态下才启动超时检测
+    if (initialState?.currentUser) {
+      return setupActivityListener();
+    }
+  }, [initialState?.currentUser]);
+
   // 添加刷新用户信息的方法
   const handleUpdateUserInfo = async () => {
     if (initialState?.fetchUserInfo) {
@@ -155,7 +221,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
                           await userLogoutUsingPost();
                           // 清除token
                           removeToken();
-                          await setInitialState((s) => ({
+                          setInitialState((s) => ({
                             ...s,
                             currentUser: undefined,
                           }));
@@ -201,7 +267,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
           <a onClick={() => history.push('/')} style={{ display: 'flex', alignItems: 'center' }}>
             <img src="/favicon.ico" alt="logo" style={{ height: '28px', marginRight: '12px' }} />
             <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#000' }}>
-              API 接口服务平台
+              API 接口应用平台
             </h1>
           </a>
         </div>
